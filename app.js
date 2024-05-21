@@ -1,31 +1,29 @@
-$('.search-button').on('click', function () {
-  $.ajax({
-    url:
-      'http://www.omdbapi.com/?apikey=6dd6389&s=' + $('.input-keyword').val(),
-    success: (result) => {
-      const movie = result.Search;
+const searchBtn = document.querySelector('.search-button');
+searchBtn.addEventListener('click', function () {
+  const inputKeyword = document.querySelector('.input-keyword');
+  fetch('http://www.omdbapi.com/?apikey=6dd6389&s=' + inputKeyword.value)
+    .then((response) => response.json())
+    .then((response) => {
+      const movies = response.Search;
       let card = '';
-      movie.forEach((el) => {
-        card += cardBox(el);
-      });
-      $('.mov-container').html(card);
-      $('.mov-detail-button').on('click', function () {
-        $.ajax({
-          url:
-            'http://www.omdbapi.com/?apikey=6dd6389&i=' +
-            $(this).data('imdbid'),
-          success: (el) => {
-            const movDetail = showDetail(el);
+      movies.forEach((el) => (card += cardBox(el)));
+      const movContainer = document.querySelector('.mov-container');
+      movContainer.innerHTML = card;
 
-            $('.modal-body').html(movDetail);
-          },
+      const detailBtn = document.querySelectorAll('.mov-detail-button');
+      detailBtn.forEach((btn) => {
+        btn.addEventListener('click', function () {
+          const imdbid = this.dataset.imdbid;
+          fetch('http://www.omdbapi.com/?apikey=6dd6389&i=' + imdbid)
+            .then((response) => response.json())
+            .then((el) => {
+              const showDetails = showDetail(el);
+              const modalBody = document.querySelector('.modal-body');
+              modalBody.innerHTML = showDetails;
+            });
         });
       });
-    },
-    error: (err) => {
-      console.log(err.responseText);
-    },
-  });
+    });
 });
 
 function cardBox(el) {
