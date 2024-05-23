@@ -1,35 +1,28 @@
 const searchBtn = document.querySelector('.search-button');
 searchBtn.addEventListener('click', async function () {
-  const inputKeyword = document.querySelector('.input-keyword');
-  const movie = await getMovie(inputKeyword.value);
-  updateUI(movie);
-});
-
-document.addEventListener('click', async function (e) {
-  if (e.target.classList.contains('mov-detail-button')) {
-    const imdbid = e.target.dataset.imdbid;
-    getShowDetail(imdbid)
-      .then((movieDetail) => uiDetail(movieDetail))
-      .catch((error) => console.error(error));
+  try {
+    const inputKeyword = document.querySelector('.input-keyword');
+    const movie = await getMovie(inputKeyword.value);
+    updateUI(movie);
+  } catch (err) {
+    alert(err);
   }
 });
 
-function getShowDetail(imdbid) {
-  return fetch('http://www.omdbapi.com/?apikey=6dd6389&i=' + imdbid)
-    .then((response) => response.json())
-    .then((el) => el);
-}
-
-function uiDetail(el) {
-  const showDetails = showDetail(el);
-  const modalBody = document.querySelector('.modal-body');
-  modalBody.innerHTML = showDetails;
-}
-
 function getMovie(keyword) {
   return fetch('http://www.omdbapi.com/?apikey=6dd6389&s=' + keyword)
-    .then((response) => response.json())
-    .then((response) => response.Search);
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json();
+    })
+    .then((response) => {
+      if (response.Response === 'False') {
+        throw new Error(response.Error);
+      }
+      return response.Search;
+    });
 }
 
 function updateUI(movie) {
@@ -37,6 +30,35 @@ function updateUI(movie) {
   movie.forEach((el) => (card += cardBox(el)));
   const movContainer = document.querySelector('.mov-container');
   movContainer.innerHTML = card;
+}
+
+document.addEventListener('click', async function (e) {
+  try {
+    if (e.target.classList.contains('mov-detail-button')) {
+      const imdbid = e.target.dataset.imdbid;
+      const movDetail = await getShowDetail(imdbid);
+      uiDetail(movDetail);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+function getShowDetail(imdbid) {
+  return fetch('http://www.omdbapi.com/?apikey=6dd6389&i=' + imdbid)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(response.responseText);
+      }
+      return response.json();
+    })
+    .then((el) => el);
+}
+
+function uiDetail(el) {
+  const showDetails = showDetail(el);
+  const modalBody = document.querySelector('.modal-body');
+  modalBody.innerHTML = showDetails;
 }
 
 function cardBox(el) {
